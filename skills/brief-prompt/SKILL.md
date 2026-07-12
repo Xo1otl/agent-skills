@@ -29,17 +29,16 @@ Use inline `e.g.` inside sections for atoms; use this section for multi-line.
 
 Ordered test per extracted fact — order makes sections mutually exclusive:
 
-1. Derivable from code/web/general knowledge → delete.
-2. The end state → Objective.
-3. Intent, why it matters, or behavior-shaping non-binding info → Context.
-4. Violation = failure → Constraints.
+1. The end state → Objective.
+2. Intent, why it matters, or behavior-shaping non-binding info → Context.
+3. Violation = failure → Constraints.
 
 ## Distillation
 
+* Derivable from code/web/general knowledge → delete.
 * Keyword over explanation: name concepts (e.g. `AdS/CFT`, `QPE`), never explain them.
 * De-proceduralize: steps → goal + invariants. Keep ordering only when order itself is the invariant.
-* Cut adjectives, intensifiers, politeness, filler.
-* Preserve verbatim: identifiers, paths, numbers, quoted opinions.
+* Adjectives, intensifiers, politeness, filler → delete.
 * Be extremely concise and sacrifice grammar for the sake of concision.
 
 ## Output
