@@ -6,7 +6,7 @@ description: Distill unstructured thoughts (brain dump, args, or file) into a pr
 # Prompt Generation
 
 Input: unstructured thoughts.
-Audience: frontier model. Encyclopedic — supply only what it cannot know or infer; keywords suffice, its knowledge fills in.
+Audience: frontier model. Encyclopedic — supply only what it cannot know or infer; keywords suffice.
 
 ## Template
 
@@ -16,7 +16,7 @@ Pure goal, one line. The end state — no how, no why.
 
 # Context
 <!-- NOTE: Preserve the user's uncertainty; DO NOT conflate facts and opinions/hypotheses. -->
-Intent/why/meta context behind the request, non-binding concerns/opinions, facts the model cannot know, domain heuristics, soft priorities.
+Intent/rationale/meta context behind the request, non-binding concerns/opinions, facts the model cannot know, domain heuristics, soft priorities.
 
 # Constraints (Optional: only when warranted)
 Binding invariants: output path/format/limits, reference files, imperatives, hard priorities.
@@ -27,7 +27,7 @@ Use inline `e.g.` inside sections for atoms; use this section for multi-line.
 
 ## Classification
 
-Ordered test per extracted fact — order makes sections mutually exclusive:
+Ordered test per extracted fact — make sections mutually exclusive:
 
 1. The end state → Objective.
 2. Intent, why it matters, or behavior-shaping non-binding info → Context.

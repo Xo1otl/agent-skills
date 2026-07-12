@@ -6,7 +6,7 @@ description: Compact llm-facing text (code comments, CLAUDE.md, dev notes) by cu
 # LLM-Content Compaction
 
 Input: llm-facing text — code comments, CLAUDE.md / AGENTS.md, dev notes (file/scope via args, else content under discussion).
-Reader: frontier model. Encyclopedic — supply only what it cannot know or infer; keywords suffice, its knowledge fills in.
+Reader: frontier model. Encyclopedic — supply only what it cannot know or infer; keywords suffice.
 
 LLM edits accrete narration — comments, rationale, walkthroughs; default to delete.
 
