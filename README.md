@@ -11,10 +11,6 @@ npx skills add Xo1otl/agent-skills --global --yes
 Drop `--global` to install into the current project only.
 Drop `--yes` to pick skills interactively.
 
-## Skills
-
-Each subdirectory of [`skills/`](skills/) is one skill; its `SKILL.md` states what it does and when it triggers.
-
 ## Layout
 
 ```
