@@ -92,12 +92,12 @@ poll_usage() {
 }
 
 emit_after_unit_stop() {
-  printf 'Finish the current unit of work, then pause until the quota resets. Usage is at %s%%; the window resets at %s.\n' \
+  printf 'Finish the current unit of work, then end your turn; my next notification will tell you when to resume. Usage is at %s%%; the window resets at %s.\n' \
     "$1" "$2"
 }
 
 emit_mid_unit_stop() {
-  printf 'Stop now without finishing the current unit of work, then pause until the quota resets. Usage is at %s%%; the window resets at %s.\n' \
+  printf 'Abandon the current unit of work and end your turn; my next notification will tell you when to resume. Usage is at %s%%; the window resets at %s.\n' \
     "$1" "$2"
 }
 
