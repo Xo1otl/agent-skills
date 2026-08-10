@@ -5,7 +5,9 @@ description: Keep token-heavy Claude Code loops from exhausting the usage quota.
 
 # Claude Usage Guard
 
-Usage is limited per 5-hour window. Let `scripts/notifier.sh` pace you so you don't hit the limit. The weekly limit is out of scope (i.e. don't wait for the weekend).
+Usage is capped per 5-hour window. `scripts/notifier.sh` tracks consumption and
+tells you when to stop and when to pick back up. The weekly cap is out of scope
+(i.e. don't wait for the weekend).
 
 ## Process
 
