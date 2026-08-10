@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 set -u
 
-graceful=90
-force=98
-interval=60
+after_unit=""
+mid_unit=""
+interval=""
 
 last_reset=""
-graceful_sent=0
-force_sent=0
+after_unit_sent=0
+mid_unit_sent=0
 poll_failed=0
 
 usage() {
   printf '%s\n' \
-    'Usage: watchdog.sh [--graceful PERCENT] [--force PERCENT] [--interval SECONDS]'
+    'Usage: notifier.sh --after-unit PERCENT --mid-unit PERCENT --interval SECONDS' \
+    '' \
+    '  --after-unit PERCENT  usage % at which to stop after the current unit of work' \
+    '  --mid-unit PERCENT    usage % at which to stop immediately, mid-unit' \
+    '  --interval SECONDS    how often to poll /usage'
 }
 
 fail() {
@@ -23,11 +27,11 @@ fail() {
 parse_args() {
   while (($# > 0)); do
     case "$1" in
-      --graceful | --force | --interval)
+      --after-unit | --mid-unit | --interval)
         (($# >= 2)) || fail "$1 requires a value"
         case "$1" in
-          --graceful) graceful=$2 ;;
-          --force) force=$2 ;;
+          --after-unit) after_unit=$2 ;;
+          --mid-unit) mid_unit=$2 ;;
           --interval) interval=$2 ;;
         esac
         shift 2
@@ -40,16 +44,20 @@ parse_args() {
     esac
   done
 
-  [[ $graceful =~ ^[0-9]+$ ]] || fail '--graceful must be an integer from 0 to 99'
-  [[ $force =~ ^[0-9]+$ ]] || fail '--force must be an integer from 1 to 100'
+  [[ -n $after_unit ]] || fail '--after-unit is required'
+  [[ -n $mid_unit ]] || fail '--mid-unit is required'
+  [[ -n $interval ]] || fail '--interval is required'
+
+  [[ $after_unit =~ ^[0-9]+$ ]] || fail '--after-unit must be an integer from 0 to 99'
+  [[ $mid_unit =~ ^[0-9]+$ ]] || fail '--mid-unit must be an integer from 1 to 100'
   [[ $interval =~ ^[0-9]+$ ]] || fail '--interval must be a positive integer'
 
-  graceful=$((10#$graceful))
-  force=$((10#$force))
+  after_unit=$((10#$after_unit))
+  mid_unit=$((10#$mid_unit))
   interval=$((10#$interval))
 
-  ((graceful >= 0 && graceful < force && force <= 100)) ||
-    fail 'thresholds must satisfy 0 <= graceful < force <= 100'
+  ((after_unit >= 0 && after_unit < mid_unit && mid_unit <= 100)) ||
+    fail 'thresholds must satisfy 0 <= after-unit < mid-unit <= 100'
   ((interval > 0)) || fail '--interval must be a positive integer'
 }
 
@@ -83,18 +91,18 @@ poll_usage() {
   parse_usage "$payload"
 }
 
-emit_graceful_stop() {
-  printf 'The usage quota for the current five-hour window is %s%% consumed and resets at %s. Finish the current unit of work, then pause until the quota resets.\n' \
+emit_after_unit_stop() {
+  printf 'Finish the current unit of work, then pause until the quota resets. Usage is at %s%%; the window resets at %s.\n' \
     "$1" "$2"
 }
 
-emit_force_stop() {
-  printf 'The usage quota for the current five-hour window is %s%% consumed and resets at %s. Pause immediately until the quota resets.\n' \
+emit_mid_unit_stop() {
+  printf 'Stop now without finishing the current unit of work, then pause until the quota resets. Usage is at %s%%; the window resets at %s.\n' \
     "$1" "$2"
 }
 
 emit_resume() {
-  printf '%s\n' 'The usage quota has reset. Resume the paused loop.'
+  printf '%s\n' 'Resume the paused loop; the quota has reset.'
 }
 
 handle_usage() {
@@ -102,23 +110,23 @@ handle_usage() {
   local reset=$2
 
   if [[ -n $last_reset && $reset != "$last_reset" ]]; then
-    if ((graceful_sent || force_sent)); then
+    if ((after_unit_sent || mid_unit_sent)); then
       emit_resume
     fi
-    graceful_sent=0
-    force_sent=0
+    after_unit_sent=0
+    mid_unit_sent=0
   fi
   last_reset=$reset
 
-  if ((used >= force)); then
-    if ((!force_sent)); then
-      emit_force_stop "$used" "$reset"
-      graceful_sent=1
-      force_sent=1
+  if ((used >= mid_unit)); then
+    if ((!mid_unit_sent)); then
+      emit_mid_unit_stop "$used" "$reset"
+      after_unit_sent=1
+      mid_unit_sent=1
     fi
-  elif ((used >= graceful && !graceful_sent)); then
-    emit_graceful_stop "$used" "$reset"
-    graceful_sent=1
+  elif ((used >= after_unit && !after_unit_sent)); then
+    emit_after_unit_stop "$used" "$reset"
+    after_unit_sent=1
   fi
 }
 
