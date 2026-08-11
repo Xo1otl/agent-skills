@@ -12,15 +12,15 @@ poll_failed=0
 
 usage() {
   printf '%s\n' \
-    'Usage: notifier.sh --after-unit PERCENT --mid-unit PERCENT --interval SECONDS' \
+    "Usage: ${0##*/} --after-unit PERCENT --mid-unit PERCENT --interval SECONDS" \
     '' \
-    '  --after-unit PERCENT  usage threshold for ending the turn after the current unit of work' \
-    '  --mid-unit PERCENT    usage threshold for ending the turn immediately, mid-unit' \
-    '  --interval SECONDS    polling interval for /usage'
+    '  --after-unit PERCENT  usage threshold at which to finish the current unit of work, then end the turn' \
+    '  --mid-unit PERCENT    usage threshold at which to end the turn immediately, even mid-unit' \
+    '  --interval SECONDS    how often to poll /usage, in seconds'
 }
 
 fail() {
-  printf 'claude-usage-guard: %s\n' "$1" >&2
+  printf '%s: %s\n' "${0##*/}" "$1" >&2
   exit 2
 }
 
@@ -56,8 +56,9 @@ parse_args() {
   mid_unit=$((10#$mid_unit))
   interval=$((10#$interval))
 
-  ((after_unit >= 0 && after_unit < mid_unit && mid_unit <= 100)) ||
-    fail 'thresholds must satisfy 0 <= after-unit < mid-unit <= 100'
+  ((after_unit <= 99)) || fail '--after-unit must be an integer from 0 to 99'
+  ((mid_unit >= 1 && mid_unit <= 100)) || fail '--mid-unit must be an integer from 1 to 100'
+  ((after_unit < mid_unit)) || fail '--after-unit must be less than --mid-unit'
   ((interval > 0)) || fail '--interval must be a positive integer'
 }
 
@@ -92,17 +93,17 @@ poll_usage() {
 }
 
 emit_after_unit_stop() {
-  printf 'Finish the current unit of work, then end your turn; my next notification will tell you when to resume. Usage is at %s%%; the window resets at %s.\n' \
+  printf 'Finish the current unit of work, then end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
     "$1" "$2"
 }
 
 emit_mid_unit_stop() {
-  printf 'Abandon the current unit of work and end your turn; my next notification will tell you when to resume. Usage is at %s%%; the window resets at %s.\n' \
+  printf 'Stop the current unit of work immediately and end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
     "$1" "$2"
 }
 
 emit_resume() {
-  printf '%s\n' 'Resume the loop; the usage window has reset.'
+  printf '%s\n' 'Resume work; the usage window has reset.'
 }
 
 handle_usage() {
@@ -132,14 +133,14 @@ handle_usage() {
 
 main() {
   parse_args "$@"
-  command -v claude >/dev/null 2>&1 || fail 'claude is not available on PATH'
+  command -v claude >/dev/null 2>&1 || fail 'claude not found on PATH'
 
   while true; do
     if poll_usage; then
       poll_failed=0
       handle_usage "$parsed_used" "$parsed_reset"
     elif ((!poll_failed)); then
-      printf '%s\n' 'claude-usage-guard: unable to read /usage; retrying' >&2
+      printf '%s: %s\n' "${0##*/}" 'unable to read /usage; retrying' >&2
       poll_failed=1
     fi
     sleep "$interval"
