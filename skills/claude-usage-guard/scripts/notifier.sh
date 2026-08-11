@@ -102,7 +102,7 @@ emit_mid_unit_stop() {
 }
 
 emit_resume() {
-  printf '%s\n' 'Resume the paused loop; the usage window has reset.'
+  printf '%s\n' 'Resume the loop; the usage window has reset.'
 }
 
 handle_usage() {
