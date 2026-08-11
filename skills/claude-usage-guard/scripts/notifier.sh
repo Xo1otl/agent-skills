@@ -93,12 +93,12 @@ poll_usage() {
 }
 
 emit_after_unit_stop() {
-  printf 'Finish the current unit of work, then end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
+  printf 'Finish the current unit of work, then end your turn; you will be notified when it's safe to resume. Usage is at %s%%; the window resets %s.\n' \
     "$1" "$2"
 }
 
 emit_mid_unit_stop() {
-  printf 'Stop the current unit of work immediately and end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
+  printf 'Stop the current unit of work immediately and end your turn; you will be notified when it's safe to resume. Usage is at %s%%; the window resets %s.\n' \
     "$1" "$2"
 }
 
