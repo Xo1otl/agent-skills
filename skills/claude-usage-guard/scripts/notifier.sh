@@ -14,7 +14,7 @@ usage() {
   printf '%s\n' \
     "Usage: ${0##*/} --after-unit PERCENT --mid-unit PERCENT --interval SECONDS" \
     '' \
-    '  --after-unit PERCENT  usage threshold at which to finish the current unit of work, then end the turn' \
+    '  --after-unit PERCENT  usage threshold at which to end the turn after the current unit of work' \
     '  --mid-unit PERCENT    usage threshold at which to end the turn immediately, even mid-unit' \
     '  --interval SECONDS    how often to poll /usage, in seconds'
 }
