@@ -14,9 +14,9 @@ usage() {
   printf '%s\n' \
     'Usage: notifier.sh --after-unit PERCENT --mid-unit PERCENT --interval SECONDS' \
     '' \
-    '  --after-unit PERCENT  usage % at which to stop after the current unit of work' \
-    '  --mid-unit PERCENT    usage % at which to stop immediately, mid-unit' \
-    '  --interval SECONDS    how often to poll /usage'
+    '  --after-unit PERCENT  usage threshold for ending the turn after the current unit of work' \
+    '  --mid-unit PERCENT    usage threshold for ending the turn immediately, mid-unit' \
+    '  --interval SECONDS    polling interval for /usage'
 }
 
 fail() {
