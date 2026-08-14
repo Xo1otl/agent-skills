@@ -5,7 +5,6 @@ after_unit=""
 mid_unit=""
 interval=""
 
-last_reset=""
 after_unit_sent=0
 mid_unit_sent=0
 poll_failed=0
@@ -110,14 +109,13 @@ handle_usage() {
   local used=$1
   local reset=$2
 
-  if [[ -n $last_reset && $reset != "$last_reset" ]]; then
+  if ((used < after_unit)); then
     if ((after_unit_sent || mid_unit_sent)); then
       emit_resume
     fi
     after_unit_sent=0
     mid_unit_sent=0
   fi
-  last_reset=$reset
 
   if ((used >= mid_unit)); then
     if ((!mid_unit_sent)); then
