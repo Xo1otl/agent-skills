@@ -1,6 +1,7 @@
 ---
 name: semantic-minifier
 description: Compact llm-facing text (code comments, CLAUDE.md, dev notes) by cutting everything the reader can infer.
+disable-model-invocation: true
 ---
 
 # LLM-Content Compaction

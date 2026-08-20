@@ -2,7 +2,7 @@
 set -u
 
 readonly TEST_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-readonly NOTIFIER="$TEST_DIR/../scripts/notifier.sh"
+readonly NOTIFIER="$TEST_DIR/../scripts/claude_notifier.sh"
 
 failures=0
 

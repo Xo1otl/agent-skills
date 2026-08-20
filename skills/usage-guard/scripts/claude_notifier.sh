@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-readonly PROGRAM="${BASH_SOURCE[0]##*/}"
+readonly PROGRAM="${USAGE_GUARD_PROGRAM:-${BASH_SOURCE[0]##*/}}"
 readonly STATE_ACTIVE=0
 readonly STATE_AFTER_UNIT=1
 readonly STATE_MID_UNIT=2
