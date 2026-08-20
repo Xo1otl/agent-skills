@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 set -u
 
+readonly PROGRAM="${BASH_SOURCE[0]##*/}"
+readonly STATE_ACTIVE=0
+readonly STATE_AFTER_UNIT=1
+readonly STATE_MID_UNIT=2
+
 after_unit=""
 mid_unit=""
 interval=""
 
-after_unit_sent=0
-mid_unit_sent=0
+stop_state=$STATE_ACTIVE
+window_reset=""
 poll_failed=0
 
 usage() {
   printf '%s\n' \
-    "Usage: ${0##*/} --after-unit PERCENT --mid-unit PERCENT --interval SECONDS" \
+    "Usage: $PROGRAM --after-unit PERCENT --mid-unit PERCENT --interval SECONDS" \
     '' \
     '  --after-unit PERCENT  usage threshold at which to end the turn after the current unit of work' \
     '  --mid-unit PERCENT    usage threshold at which to end the turn immediately, even mid-unit' \
@@ -19,7 +24,7 @@ usage() {
 }
 
 fail() {
-  printf '%s: %s\n' "${0##*/}" "$1" >&2
+  printf '%s: %s\n' "$PROGRAM" "$1" >&2
   exit 2
 }
 
@@ -63,21 +68,24 @@ parse_args() {
 
 parse_usage() {
   local payload=$1
-  local tail used reset
+  local session used reset
   local percent='%'
   local escaped_newline='\n'
 
   [[ $payload == *'Current session: '* ]] || return 1
-  tail=${payload#*'Current session: '}
-  used=${tail%%"$percent"*}
+  session=${payload#*'Current session: '}
+  used=${session%%"$percent"*}
   [[ $used =~ ^[0-9]+$ ]] || return 1
 
-  [[ $tail == *'resets '* ]] || return 1
-  tail=${tail#*'resets '}
-  reset=${tail%%"$escaped_newline"*}
-  [[ -n $reset && $reset != "$tail" ]] || return 1
+  [[ $session == *'resets '* ]] || return 1
+  session=${session#*'resets '}
+  reset=${session%%"$escaped_newline"*}
+  [[ -n $reset && $reset != "$session" ]] || return 1
 
-  parsed_used=$((10#$used))
+  used=$((10#$used))
+  ((used <= 100)) || return 1
+
+  parsed_used=$used
   parsed_reset=$reset
 }
 
@@ -91,41 +99,36 @@ poll_usage() {
   parse_usage "$payload"
 }
 
-emit_after_unit_stop() {
-  printf 'Finish the current unit of work, then end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
-    "$1" "$2"
-}
-
-emit_mid_unit_stop() {
-  printf 'Stop the current unit of work immediately and end your turn; you will be notified when it is safe to resume. Usage is at %s%%; the window resets %s.\n' \
-    "$1" "$2"
+emit_stop() {
+  printf '%s Usage is at %s%%; the window resets %s.\n' "$1" "$2" "$3"
 }
 
 emit_resume() {
-  printf '%s\n' 'Resume work; the usage window has reset.'
+  printf 'Resume work; a new usage window is available at %s%% and resets %s.\n' "$1" "$2"
 }
 
 handle_usage() {
   local used=$1
   local reset=$2
 
-  if ((used < after_unit)); then
-    if ((after_unit_sent || mid_unit_sent)); then
-      emit_resume
-    fi
-    after_unit_sent=0
-    mid_unit_sent=0
+  if ((stop_state == STATE_ACTIVE)); then
+    window_reset=$reset
+  elif [[ $reset != "$window_reset" ]] && ((used < after_unit)); then
+    emit_resume "$used" "$reset"
+    stop_state=$STATE_ACTIVE
+    window_reset=$reset
   fi
 
-  if ((used >= mid_unit)); then
-    if ((!mid_unit_sent)); then
-      emit_mid_unit_stop "$used" "$reset"
-      after_unit_sent=1
-      mid_unit_sent=1
-    fi
-  elif ((used >= after_unit && !after_unit_sent)); then
-    emit_after_unit_stop "$used" "$reset"
-    after_unit_sent=1
+  if ((used >= mid_unit && stop_state != STATE_MID_UNIT)); then
+    emit_stop \
+      'Stop the current unit of work immediately and end your turn; you will be notified when it is safe to resume.' \
+      "$used" "$reset"
+    stop_state=$STATE_MID_UNIT
+  elif ((used >= after_unit && stop_state == STATE_ACTIVE)); then
+    emit_stop \
+      'Finish the current unit of work, then end your turn; you will be notified when it is safe to resume.' \
+      "$used" "$reset"
+    stop_state=$STATE_AFTER_UNIT
   fi
 }
 
@@ -138,7 +141,7 @@ main() {
       poll_failed=0
       handle_usage "$parsed_used" "$parsed_reset"
     elif ((!poll_failed)); then
-      printf '%s: %s\n' "${0##*/}" 'unable to read /usage; retrying' >&2
+      printf '%s: unable to read /usage; retrying\n' "$PROGRAM" >&2
       poll_failed=1
     fi
     sleep "$interval"
